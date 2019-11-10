@@ -25,6 +25,10 @@ let reconciler = ReactReconciler({
       if (props[k]) el[k] = props[k];
     });
 
+    if (props.onClick) {
+      el.addEventListener("click", props.onClick);
+    }
+
     // react reconciler doesn't have the notion of what a DOM or any host env is,
     // and returning this merely allows the reconciler to pass it back to
     // us at other functions to do stuff with them later.
@@ -43,7 +47,7 @@ let reconciler = ReactReconciler({
     return document.createTextNode(text);
   },
 
-  // 2. connect stuff to containers
+  // 2. add stuff to containers
   appendChildToContainer: (container, child) => {
     container.appendChild(child);
   },
@@ -52,6 +56,21 @@ let reconciler = ReactReconciler({
   },
   appendInitialChild: (container, child) => {
     container.appendChild(child);
+  },
+
+  // 3. remove stuff (on an update cycle, stuff is removed and then added again)
+  removeChildFromContainer: (container, child) => {
+    container.removeChild(child);
+  },
+  removeChild: (parentInstance, child) => {
+    parentInstance.removeChild(child);
+  },
+  insertInContainerBefore: (container, child, before) => {
+    // used when adding stuff in the middle of a list, instead of at the end
+    container.insertBefore(child, before);
+  },
+  insertBefore: (parentInstance, child, before) => {
+    parentInstance.insertBefore(child, before);
   },
 
   prepareUpdate: (

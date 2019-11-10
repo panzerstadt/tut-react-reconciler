@@ -3,12 +3,13 @@ import logo from "./logo.svg";
 import "./App.css";
 
 const App = () => {
+  const [show, setShow] = useState(true); // uses removeChild
   const [count, setCount] = useState(0);
 
   return (
-    <div className="App">
+    <div className="App" onClick={() => setShow(show => !show)}>
       <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
+        {show && <img src={logo} className="App-logo" alt="logo" />}
         <p>
           Edit <code>src/App.js</code> and save to reload.
         </p>
