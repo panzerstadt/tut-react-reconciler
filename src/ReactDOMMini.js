@@ -1,5 +1,11 @@
+// ref: https://www.youtube.com/watch?v=CGpMlWVcHok
+// ref: https://github.com/prometheansacrifice/my-react-dom
+
 // import the guts of react
 import ReactReconciler from "react-reconciler";
+
+// magically update text color when too dark
+import { isDark } from "./brightnessChecker";
 
 let reconciler = ReactReconciler({
   // configs for how to talk to the host environment
@@ -24,6 +30,13 @@ let reconciler = ReactReconciler({
     ["alt", "className", "src", "rel", "href", "target"].forEach(k => {
       if (props[k]) el[k] = props[k];
     });
+
+    if (props.style) {
+      const styles = Object.entries(props.style);
+      styles.forEach(kv => {
+        el.style[kv[0]] = kv[1];
+      });
+    }
 
     if (props.onClick) {
       el.addEventListener("click", props.onClick);
@@ -73,6 +86,8 @@ let reconciler = ReactReconciler({
     parentInstance.insertBefore(child, before);
   },
 
+  // useEffect related
+  // render phase
   prepareUpdate: (
     instance,
     type,
@@ -80,16 +95,46 @@ let reconciler = ReactReconciler({
     newProps,
     rootContainerInstance,
     hostContext
-  ) => {},
-
+  ) => {
+    // the return should return a "what's changed"
+    let payload;
+    if (oldProps.style !== newProps.style) {
+      // check for contrast with color
+      if (
+        newProps.style.ensureAccessibility &&
+        newProps.style.backgroundColor
+      ) {
+        if (isDark(newProps.style.backgroundColor)) {
+          newProps.style.color = "white";
+        } else {
+          newProps.style.color = "black";
+        }
+      }
+      //   console.log("change calculated!", newProps.style);
+      payload = { newStyles: newProps.style };
+    }
+    return payload;
+  },
+  // commit phase
   commitUpdate: (
-    instance,
-    updatePayload,
+    instance, // the DOM element instance to commit the update to
+    updatePayload, // the payload from prepareUpdate
     type,
     oldProps,
     newProps,
     internalInstanceHandle
-  ) => {},
+  ) => {
+    // update new styles
+    if (updatePayload.newStyles) {
+      const styles = Object.entries(updatePayload.newStyles);
+      styles.forEach(kv => {
+        instance.style[kv[0]] = kv[1];
+      });
+    }
+  },
+  commitTextUpdate: (textInstance, oldText, newText) => {
+    textInstance.nodeValue = newText;
+  },
   finalizeInitialChildren: () => {},
   getChildHostContext: () => {},
   getPublicInstance: () => {},
@@ -97,7 +142,11 @@ let reconciler = ReactReconciler({
   prepareForCommit: () => {},
   resetAfterCommit: () => {},
 
-  shouldSetTextContent: () => {
+  shouldSetTextContent: (type, props) => {
+    if (props.children) {
+      const children = props.children;
+      console.log(children);
+    }
     return false;
   }
 });
