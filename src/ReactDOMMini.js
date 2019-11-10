@@ -21,8 +21,9 @@ let reconciler = ReactReconciler({
     // props is all element props (html + react)
     console.log(type, props);
     let el = document.createElement(type);
-    if (props.className) el.className = props.className;
-    if (props.src) el.src = props.src;
+    ["alt", "className", "src", "rel", "href", "target"].forEach(k => {
+      if (props[k]) el[k] = props[k];
+    });
 
     // react reconciler doesn't have the notion of what a DOM or any host env is,
     // and returning this merely allows the reconciler to pass it back to
